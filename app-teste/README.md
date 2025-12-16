@@ -1,6 +1,6 @@
 # Aplicação CRUD Simples com Python e MySQL
 
-Aplicação Docker simples em Python (Flask) que realiza operações CRUD com MySQL.
+Aplicação Docker simples em Python (Flask) com interface web para cadastro de pessoas (nome e idade).
 
 ## Como usar
 
@@ -10,51 +10,34 @@ Aplicação Docker simples em Python (Flask) que realiza operações CRUD com My
 docker-compose up -d
 ```
 
-### 2. Acessar a API
+### 2. Acessar a aplicação
 
-A aplicação estará disponível em: `http://localhost:5000`
+Abra seu navegador e acesse: `http://localhost:5000`
 
-### 3. Endpoints disponíveis
+A interface web permite:
+- Visualizar todas as pessoas cadastradas
+- Adicionar novas pessoas (nome e idade)
 
-- `GET /` - Informações sobre a API
-- `GET /produtos` - Lista todos os produtos
-- `GET /produtos/<id>` - Busca um produto por ID
-- `POST /produtos` - Cria um novo produto
-- `PUT /produtos/<id>` - Atualiza um produto
-- `DELETE /produtos/<id>` - Deleta um produto
+### 3. API REST (opcional)
 
-### 4. Exemplos de uso
+A aplicação também expõe uma API REST:
 
-#### Criar um produto:
+- `GET /api/pessoas` - Lista todas as pessoas
+- `POST /api/pessoas` - Cria uma nova pessoa
+
+#### Exemplo de uso da API:
+
 ```bash
-curl -X POST http://localhost:5000/produtos \
+# Criar uma pessoa
+curl -X POST http://localhost:5000/api/pessoas \
   -H "Content-Type: application/json" \
-  -d '{"nome": "Notebook", "preco": 2500.00, "descricao": "Notebook Dell"}'
+  -d '{"nome": "João Silva", "idade": 30}'
+
+# Listar pessoas
+curl http://localhost:5000/api/pessoas
 ```
 
-#### Listar produtos:
-```bash
-curl http://localhost:5000/produtos
-```
-
-#### Buscar produto por ID:
-```bash
-curl http://localhost:5000/produtos/1
-```
-
-#### Atualizar produto:
-```bash
-curl -X PUT http://localhost:5000/produtos/1 \
-  -H "Content-Type: application/json" \
-  -d '{"nome": "Notebook Atualizado", "preco": 2300.00}'
-```
-
-#### Deletar produto:
-```bash
-curl -X DELETE http://localhost:5000/produtos/1
-```
-
-### 5. Parar os serviços
+### 4. Parar os serviços
 
 ```bash
 docker-compose down

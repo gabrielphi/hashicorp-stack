@@ -24,4 +24,42 @@ services:
     # Exemplo de comando padrão rodando o playbook
     command: ["ansible-playbook", "-i", "inventory.ini", "site.yml"]
 
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-app-teste
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app-teste:
+    build:
+      context: ./app-teste
+      dockerfile: Dockerfile
+    container_name: app-teste
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: testdb
+      DB_PORT: 3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
 
