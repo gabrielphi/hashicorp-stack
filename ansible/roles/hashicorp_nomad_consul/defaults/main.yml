@@ -1,0 +1,20 @@
+---
+# Defaults do role hashicorp_nomad_consul
+
+# Consul
+consul_datacenter: "dc1"
+consul_log_level: "INFO"
+consul_node_name: "nomad-consul-server"
+consul_bind_addr: "0.0.0.0"      # Ideal: IP PRIVADO da VM (pode vir de Terraform)
+consul_client_addr: "0.0.0.0"    # 0.0.0.0 para expor UI externamente
+consul_http_addr: "127.0.0.1:8500"
+
+# Nomad
+nomad_datacenter: "dc1"
+nomad_bind_addr: "0.0.0.0"       # Pode ser 0.0.0.0 ou IP privado
+nomad_network_interface: "ens3"  # Ajustar conforme `ip a` na VM
+
+# CNI
+cni_plugins_url: "https://github.com/containernetworking/plugins/releases/download/v1.4.0/cni-plugins-linux-amd64-v1.4.0.tgz"
+
+

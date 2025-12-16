@@ -1,0 +1,27 @@
+services:
+  ansible:
+    build:
+      context: ./ansible
+      dockerfile: Dockerfile
+    working_dir: /workspace/ansible
+    volumes:
+      - ./ansible:/workspace/ansible
+      # ============================================
+      # CONFIGURAÇÃO DA CHAVE SSH
+      # ============================================
+      # Altere "magalu" abaixo para o nome da sua chave SSH em ~/.ssh/
+      # A chave será montada como /root/.ssh/id_ed25519 dentro do container
+      # Sem :ro para permitir ajuste de permissões dentro do container
+      - ~/.ssh/magalu:/root/.ssh/id_ed25519
+    environment:
+      # Caminho da chave dentro do container (sempre id_ed25519)
+      - ANSIBLE_PRIVATE_KEY_FILE=/root/.ssh/id_ed25519
+      # Forçar uso do ansible.cfg em /etc/ansible/
+      - ANSIBLE_CONFIG=/etc/ansible/ansible.cfg
+      # Variáveis adicionais para garantir uso direto da chave
+      - ANSIBLE_HOST_KEY_CHECKING=False
+      - ANSIBLE_SSH_ARGS=-o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+    # Exemplo de comando padrão rodando o playbook
+    command: ["ansible-playbook", "-i", "inventory.ini", "site.yml"]
+
+

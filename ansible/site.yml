@@ -1,0 +1,16 @@
+---
+- name: Provisionar stack HashiCorp (Consul + Nomad) em Ubuntu 24.04
+  hosts: hashicorp_nodes
+  become: true
+
+  vars:
+    # Estes valores podem ser preenchidos via outputs do Terraform
+    ansible_ssh_user: ubuntu
+    ansible_ssh_private_key_file: "{{ lookup('env', 'ANSIBLE_PRIVATE_KEY') | default('/root/.ssh/id_ed25519', true) }}"
+    # Forçar uso direto da chave, sem ssh-agent
+    ansible_ssh_common_args: '-o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
+  roles:
+    - role: hashicorp_nomad_consul
+
+

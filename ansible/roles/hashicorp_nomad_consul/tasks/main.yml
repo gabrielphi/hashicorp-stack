@@ -1,0 +1,252 @@
+---
+- name: Update apt packages (para Docker)
+  become: true
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: Install basic packages (Docker)
+  become: true
+  ansible.builtin.apt:
+    pkg:
+      - ca-certificates
+      - curl
+
+- name: Create directory for APT keyrings (Docker)
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download Docker's official GPG key
+  become: true
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Get current system architecture
+  ansible.builtin.command: dpkg --print-architecture
+  register: deb_architecture
+  changed_when: false
+
+- name: Add Docker's official APT repository
+  become: true
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ deb_architecture.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+    filename: docker
+    state: present
+    update_cache: true
+
+- name: Install Docker packages
+  become: true
+  ansible.builtin.apt:
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+
+- name: Start service docker, if not started
+  become: true
+  ansible.builtin.service:
+    name: docker
+    state: started
+
+- name: Instalar pacotes base
+  become: true
+  apt:
+    name:
+      - curl
+      - wget
+      - gnupg
+      - software-properties-common
+    state: present
+    update_cache: false
+
+- name: Remover repositório HashiCorp mal configurado (se existir)
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/hashicorp.list
+    state: absent
+
+- name: Criar diretório para keyrings se não existir
+  become: true
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Remover chave GPG antiga se existir (para garantir download limpo)
+  become: true
+  ansible.builtin.file:
+    path: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    state: absent
+
+- name: Obter arquitetura do sistema
+  ansible.builtin.command: dpkg --print-architecture
+  register: system_architecture
+  changed_when: false
+
+- name: Baixar chave GPG da HashiCorp
+  become: true
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /tmp/hashicorp-gpg.key
+    mode: "0644"
+
+- name: Converter chave GPG para formato keyring
+  become: true
+  ansible.builtin.shell: |
+    gpg --dearmor < /tmp/hashicorp-gpg.key > /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+- name: Limpar arquivo temporário da chave GPG
+  become: true
+  ansible.builtin.file:
+    path: /tmp/hashicorp-gpg.key
+    state: absent
+
+- name: Garantir permissões corretas na chave GPG
+  become: true
+  ansible.builtin.file:
+    path: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    mode: "0644"
+    state: file
+
+- name: Adicionar repositório HashiCorp (método oficial com arquitetura)
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/hashicorp.list
+    content: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com {{ ansible_lsb.codename }} main\n"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Atualizar cache APT
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Instalar Consul e Nomad
+  become: true
+  apt:
+    name:
+      - consul
+      - nomad
+    state: present
+
+- name: Criar unit file do Consul em /etc/systemd/system/consul.service
+  ansible.builtin.template:
+    src: consul.service.j2
+    dest: /etc/systemd/system/consul.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - daemon-reload
+    - restart consul
+
+- name: Criar unit file do Nomad em /etc/systemd/system/nomad.service
+  ansible.builtin.template:
+    src: nomad.service.j2
+    dest: /etc/systemd/system/nomad.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - daemon-reload
+    - restart nomad
+
+- name: Baixar plugins CNI
+  ansible.builtin.get_url:
+    url: "{{ cni_plugins_url }}"
+    dest: /tmp/cni-plugins.tgz
+    mode: "0644"
+
+- name: Criar diretório dos plugins CNI
+  file:
+    path: /opt/cni/bin
+    state: directory
+    mode: "0755"
+
+- name: Descompactar plugins CNI
+  unarchive:
+    src: /tmp/cni-plugins.tgz
+    dest: /opt/cni/bin
+    remote_src: true
+
+- name: Criar diretório de dados do Consul
+  file:
+    path: /opt/consul
+    state: directory
+    mode: "0755"
+
+- name: Criar diretório de dados do Nomad
+  file:
+    path: /opt/nomad
+    state: directory
+    mode: "0755"
+
+- name: Backup config original do Consul (se existir)
+  ansible.builtin.shell: mv /etc/consul.d/consul.hcl /etc/consul.d/consul.hcl.bkp
+  args:
+    creates: /etc/consul.d/consul.hcl.bkp
+  ignore_errors: true
+
+- name: Template config Consul
+  template:
+    src: consul.hcl.j2
+    dest: /etc/consul.d/consul.hcl
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - restart consul
+
+- name: Backup config original do Nomad (se existir)
+  ansible.builtin.shell: mv /etc/nomad.d/nomad.hcl /etc/nomad.d/nomad.hcl.bkp
+  args:
+    creates: /etc/nomad.d/nomad.hcl.bkp
+  ignore_errors: true
+
+- name: Template config Nomad
+  template:
+    src: nomad.hcl.j2
+    dest: /etc/nomad.d/nomad.hcl
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - restart nomad
+
+- name: Habilitar e iniciar Consul
+  service:
+    name: consul
+    enabled: true
+    state: started
+
+- name: Habilitar e iniciar Nomad
+  service:
+    name: nomad
+    enabled: true
+    state: started
+
+- name: Habilitar portas do firewall (ufw) se ativo
+  block:
+    - name: Verificar se ufw está ativo
+      command: ufw status
+      register: ufw_status
+      changed_when: false
+      failed_when: false
+
+    - name: Liberar porta 8500/tcp (Consul)
+      command: ufw allow 8500/tcp
+      when: "'Status: active' in ufw_status.stdout"
+
+    - name: Liberar porta 4646/tcp (Nomad)
+      command: ufw allow 4646/tcp
+      when: "'Status: active' in ufw_status.stdout"
+
+

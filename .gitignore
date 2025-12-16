@@ -1,0 +1,123 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Ansible
+*.retry
+.ansible/
+ansible.log
+ansible.log.*
+*.vault
+vault_pass.txt
+.vault_pass
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# SSH Keys
+*.pem
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.pub
+known_hosts
+.ssh/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+ENV/
+env/
+.venv
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Arquivos temporários
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# Arquivos de sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+*.env
+
+# Arquivos de backup
+*.bak
+*.backup
+*~
+
+# Arquivos gerados
+*.generated
+generated/
+
+# Arquivos de inventário gerados
+inventory.generated
+*.generated.ini
+
